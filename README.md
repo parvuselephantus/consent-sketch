@@ -1,70 +1,95 @@
-# Getting Started with Create React App
+# consent-sketch
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+This is sketch - that means I have spent minimum time to have it just working. That makes it guaranteed to have bugs, and to have API altered with time. It works for me, but may not work for you. You are allowed to test and improve it or even contact author if improvement/fix needed.
 
-## Available Scripts
+The code is here: https://github.com/parvuselephantus/consent-sketch
 
-In the project directory, you can run:
+## Features
 
-### `npm start`
+This is sketch of consent library. It's aim is to handle **React Typescript** multiple consents - some required to have service working others not.
+Features:
+- Handle multiple consents (and their keys, titles, descriptions, ...)
+- Have Context provider, to check which conesents have been accepted by user anywhere in the code
+- Have user consents restarted if something changed recently
+- You can implement your own consent popup and configuration window (or just use the default one) - styling including
+- Accept partial/all/reject buttons
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+## Quick Start
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+install with npm:
+   npm i consent-sketch
 
-### `npm test`
+Include in your project in 3 steps:
+1. Wrap modules you are going to use consent-sketch withing ConfigSketchProvider. It is recommended to wrap whole app in App.tsx in <ConfigSketchProvider>. You will need to import it:
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+    import { ConfigSketchProvider } from 'consent-sketch';
+    
+2. Init the library. Set the list of cookies, init the last date of modification of consents (so if user applied it before, consent will popup again)
+    
+    import { useConsentSketchConfig } from "consent-sketch";
+    import useConsentSketch from "consent-sketch/dist/component/ConsentSketch";
+    
+...
 
-### `npm run build`
+    let {
+        setLastConsentChanges
+    } = useConsentSketchConfig();
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+    React.useEffect(() => {
+        //17th Feb 2024
+        setLastConsentChanges(new Date(2024, 1, 17, 0, 0, 0));
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+        //You may not call this one:
+        setCookies([
+            {title: "Main Consent", key: "general", required: true, description: <p>You need to accept it to have it working</p>},
+            {title: "Comfort", key: "comfort", description: <p>This one is optional, but you may accept it for your comfort of usage of our service</p>},
+        ]);
+    }, [setLastConsentChanges]);
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+3. Show the Consent:
 
-### `npm run eject`
+    import { CookieDialog } from "consent-sketch";
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+...
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+    <CookieDialog
+        dialogContent={<>(Optional) This is consent dialog popup message</>}
+        configContent="This is config window message"
+        // If you want to have popup visible for debug reason - here it is:
+        // forceDisplay={true}
+    ></CookieDialog>
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+And it should work. Have fun, if you see an area for improvement I will be happy to learn it.
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+## Other API's
 
-## Learn More
+It's all in the code, but let me put that here too. Main entry point for any actions should be:
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+    export interface ConsentSketchConfig {
+        showConsentDialog: boolean;
+        setShowConsentDialog: React.Dispatch<React.SetStateAction<boolean>>;
+        showCustomize: boolean;
+        setShowCustomize: React.Dispatch<React.SetStateAction<boolean>>;
+        generalCookieKey: string;
+        setGeneralCookieKey: React.Dispatch<React.SetStateAction<string>>;
+        userConsentReviewDateCookieName: string;
+        setUserConsentReviewDateCookieName: React.Dispatch<React.SetStateAction<string>>;
+        cookies: CookieDefinition[];
+        setCookies: React.Dispatch<React.SetStateAction<CookieDefinition[]>>;
+        lastConsentChanges: Date;
+        setLastConsentChanges: React.Dispatch<React.SetStateAction<Date>>;
+        lastUserConsentReview: Date;
+        setLastUserConsentReview: React.Dispatch<React.SetStateAction<Date>>;
+    }
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+Just call:
 
-### Code Splitting
+    let {<needed API's} = useConsentSketch();
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+And you should have all you need. Made my best to make it intuitive in short time.
 
-### Analyzing the Bundle Size
+## Custom GUI 
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+If you want to have your own implementation of GUI, please have a look at
+[CookieDialog code](https://github.com/parvuselephantus/consent-sketch/blob/main/src/component/CookieDialog.tsx). Hopefully the code of Dialog and Settings window is simple enough, to enable you copying it.
 
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)

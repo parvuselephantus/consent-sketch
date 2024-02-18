@@ -1,3 +1,4 @@
+import React from "react";
 import useCookiesConsent, { CookieDefinition } from "./ConsentSketch";
 import './CookieDialog.css';
 
@@ -10,6 +11,7 @@ interface CookieDialogProps {
     acceptSomeBtn?: string,
     rejectBtn?: string,
     closeSettingsBtn?: string,
+    acceptSelectedBtn?: string,
 
     children?: JSX.Element[],
     forceDisplay?: boolean;
@@ -23,15 +25,16 @@ export const CookieDialog = ({
         acceptSomeBtn = "More...",
         rejectBtn = "Reject all",
         closeSettingsBtn = "Close settings",
+        acceptSelectedBtn = "Accept selected",
         forceDisplay = false}: CookieDialogProps) => {
-
+    
     let CookieDialogHeader = () => {
         const {
             showConsentDialog,
             setShowConsentDialog,
             setShowCustomize,
-            acceptAllCookies,
-            rejectAllCookies,
+            acceptAllCookiesAndStore: acceptAllCookies,
+            rejectAllCookiesAndStore: rejectAllCookies,
         } = useCookiesConsent();
 
         const closeDialog = (e: any) => {
@@ -56,17 +59,38 @@ export const CookieDialog = ({
 
     let CookieCustomizeImpl = () => {
         const {
+            generalCookieKey,
             setShowConsentDialog,
             showCustomize,
             setShowCustomize,
             cookies,
-            acceptAllCookies,
-            rejectAllCookies,
+            acceptAllCookiesAndStore: acceptAllCookies,
+            rejectAllCookiesAndStore: rejectAllCookies,
             isCookieAccepted,
-            acceptCookie,
-            rejectCookie,
-            generalCookieKey,
+            acceptCookiesAndStore,
         } = useCookiesConsent();
+
+        let [selection, setSelection] = React.useState<any>({[generalCookieKey]: true});
+
+        React.useEffect(() => {
+            let curSelection: any = {};
+            for (let i = 0; i < cookies.length; i++) {
+                let c = cookies[i];
+                curSelection[c.key] = c.required || isCookieAccepted(c.key);
+            }
+            setSelection(curSelection);
+        }, [cookies]);
+    
+        let acceptSelected = () => {
+            let toStore: string[] = [];
+            for (let i = 0; i < cookies.length; i++) {
+                let c = cookies[i];
+                if (selection[c.key]) {
+                    toStore.push(c.key);
+                }
+            }
+            acceptCookiesAndStore(toStore);
+        }
 
         const closeDialog = (e: any) => {
             e.preventDefault();
@@ -82,15 +106,16 @@ export const CookieDialog = ({
                         <label>
                             <input 
                                 type="checkbox"
-                                onChange={e => e.target.checked ? acceptCookie(cookie.key) : rejectCookie(cookie.key)}
-                                checked={isCookieAccepted(cookie.key)}
-                                disabled={cookie.key !== generalCookieKey && !isCookieAccepted(generalCookieKey)}
+                                onChange={e => setSelection({...selection, [cookie.key]: !selection[cookie.key]})}
+                                checked={selection[cookie.key] ?? false}
+                                disabled={cookie.required}
                             ></input>
                             <b>{cookie.title}</b>
                             {cookie.description && <>{cookie.description}</>}
                         </label>                        
                     </div>)}
                     <div className="buttonFooter">
+                        <button onClick={(e) => {acceptSelected(); closeDialog(e)}}>{acceptSelectedBtn}</button>
                         <button onClick={(e) => {acceptAllCookies(); closeDialog(e)}}>{acceptAllBtn}</button>
                         <button onClick={(e) => {rejectAllCookies(); closeDialog(e)}}>{rejectBtn}</button>
                         <button onClick={(e) => {e.preventDefault(); setShowCustomize(false);}}>{closeSettingsBtn}</button>

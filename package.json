@@ -1,10 +1,16 @@
 {
   "name": "consent-sketch",
-  "version": "0.1.0",
+  "version": "0.1.9",
   "private": false,
   "description": "Reinventing the consent wheel",
   "author": "Funit Krzysztof Mroczek",
   "license": "LGPL-2.1-only",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "/dist/**",
+    "dist/component/*.css"
+  ],
   "dependencies": {
     "@types/jest": "^27.5.2",
     "@types/node": "^16.18.82",
@@ -17,8 +23,10 @@
     "web-vitals": "^2.1.4"
   },
   "scripts": {
+    "compile": "tsc",
     "start": "react-scripts start",
-    "build": "react-scripts build",
+    "build": "tsc && react-scripts build && npm run copy",
+    "copy": "copyfiles -u 1 src/**/*.css dist/",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
   },
